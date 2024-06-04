@@ -9,8 +9,8 @@ import mongoose from "mongoose";
 export async function GET(request: NextRequest) {
   await dbConnect();
   const session = await getServerSession(authOptions);
-  const user: User = session?.user as User;
-
+  const user: User = session?.user as User;  
+  
   if (!session || !session.user) {
     return NextResponse.json(
       {
@@ -24,11 +24,11 @@ export async function GET(request: NextRequest) {
   try {
     const user = await UserModel.aggregate([
       { $match: { _id: userId } },
-      { $unwind: "$messages" },
+      { $unwind: {path: "$messages", preserveNullAndEmptyArrays: true} },
       { $sort: { "messages.createdAt": -1 } },
       { $group: { _id: "$_id", messages: { $push: "$messages" } } },
     ]);
-
+    
     if (!user || user.length === 0) {
       return NextResponse.json(
         {
